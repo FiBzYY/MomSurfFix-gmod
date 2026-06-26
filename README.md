@@ -6,6 +6,38 @@ That fix modifies ``CGameMovement::TryPlayerMove()`` function to behave like mom
 
 ## Requirements
 * garrysmod_common
+  
+## Building
+- [Premake](https://premake.github.io/)
+- [garrysmod_common](https://github.com/danielga/garrysmod_common) (use `x86-64-support-sourcesdk` branch for 64bit)
+- [Visual Studio Build Tools 2022](https://visualstudio.microsoft.com/downloads/) on Windows (MinGW untested)
+  - "MSVC v143 - VS 2022 C++ x64/x86 build tools"
+  - "C++/CLI support for v143 build tools"
+- GNU make on Linux
+
+### Windows 64bit
+> [!NOTE]
+> Currently requires manually updating `sourcesdk-minimal` in `garrysmod_common` to latest commit on `x86-64-branch`
+
+```
+premake5 vs2022
+cd projects/windows/vs2022
+msbuild surffix.sln /p:Configuration=ReleaseWithSymbols
+```
+
+### Windows 32bit
+```
+set BUILD_32BIT=1
+premake5 vs2022
+cd projects/windows/vs2022
+msbuild surffix.sln /p:Configuration=ReleaseWithSymbols /p:Platform=Win32
+```
+
+### Linux 64bit
+make config=release_x86_64
+
+### Linux 32bit
+make config=release_x86_64
 
 ## Available cvars
 * **momsurffix_ramp_bumpcount** - Left from original momentum mods function, helps with fixing surf/ramp bugs;
