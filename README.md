@@ -14,3 +14,6 @@ That fix modifies ``CGameMovement::TryPlayerMove()`` function to behave like mom
 ## Special thanks to
 * [Momentum mod team for the actual fix](https://momentum-mod.org/);
 * [Guys from bhoptimer discord for testing](https://discord.gg/jyA9q5k);
+
+## DO TO:
+Fix MoveHelper patterns on linux64
