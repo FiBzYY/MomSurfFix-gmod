@@ -14,13 +14,18 @@
 #include <detouring/hook.hpp>
 #include <scanning/symbolfinder.hpp>
 
+IMoveHelperServer ***g_MoveHelperPtr = nullptr;
+
 constexpr uintptr_t off_surfaceFriction = 0x0;
+
 Symbol sym_TryPlayerMove = Symbol::FromSignature("");
 Symbol sym_ShouldHitEntity = Symbol::FromSignature("");
 Symbol sym_GetGroundEntity = Symbol::FromSignature("");
+Symbol sym_MoveHelper = Symbol::FromSignature("");
+Symbol sym_AddToTouched = Symbol::FromSignature("");
 
-// DOTO: MoveHelperServer: xref CMoveHelperServer vtable to function that references it and IMoveHelper vtable -> xref up
-Symbol sym_MoveHelperServer = Symbol::FromSignature(""); // TODO
+typedef bool (*AddToTouched_t)(void *thisptr, const CGameTrace &tr, const Vector &impactVelocity);
+AddToTouched_t func_AddToTouched = nullptr;
 
 int off_g_pEntityList = 0;
 Symbol sym_g_pEntityList = Symbol::FromSignature("");
@@ -28,14 +33,12 @@ Symbol sym_g_pEntityList = Symbol::FromSignature("");
 typedef int(*TryPlayerMove_t)(CGameMovement *, Vector *, trace_t *);
 typedef bool(*ShouldHitEntity_t)(CTraceFilterSimple *, IHandleEntity *, int);
 typedef CBaseEntity *(*GetGroundEntity_t)(CBaseEntity *);
-typedef IMoveHelperServer *(*MoveHelperServer_t)();
 
 Detouring::Hook detour_TryPlayerMove;
 
 TryPlayerMove_t func_TryPlayerMove = nullptr;
 ShouldHitEntity_t func_ShouldHitEntity = nullptr;
 GetGroundEntity_t func_GetGroundEntity = nullptr;
-MoveHelperServer_t func_MoveHelperServer = nullptr;
 
 CTraceFilterSimple::CTraceFilterSimple(const IHandleEntity *passedict, int collisionGroup, ShouldHitFunc_t pExtraShouldHitFunc) {
 	m_pPassEnt = passedict;
@@ -324,7 +327,8 @@ static int hook_TryPlayerMove(CGameMovement *self, Vector *pFirstDest, trace_t *
 
 		// Save entity that blocked us (since fraction was < 1.0) for contact
 		// Add it if it's not already in the list!!!
-		//func_MoveHelperServer()->AddToTouched(pm, mv->m_vecVelocity);
+		void *moveHelper = **reinterpret_cast<void ****>(g_MoveHelperPtr);
+		func_AddToTouched(moveHelper, pm, mv->m_vecVelocity);
 
 		// If the plane we hit has a high z component in the normal, then it's probably a floor
 		if (pm.plane.normal[2] > 0.7) {
@@ -492,8 +496,7 @@ GMOD_MODULE_OPEN() {
 		return 0;
 	}
 
-	auto _entitylist =
-	    symfinder.Resolve(server_loader.GetModule(), sym_g_pEntityList.name.c_str(), sym_g_pEntityList.length);
+	auto _entitylist = symfinder.Resolve(server_loader.GetModule(), sym_g_pEntityList.name.c_str(), sym_g_pEntityList.length);
 	if (_entitylist == nullptr) {
 		LUA->ThrowError("Failed to find entity list");
 		return 0;
@@ -531,11 +534,19 @@ GMOD_MODULE_OPEN() {
 		return 0;
 	}
 
-	//func_MoveHelperServer = reinterpret_cast<MoveHelperServer_t>(symfinder.Resolve(server_loader.GetModule(), sym_MoveHelperServer.name.c_str(), sym_MoveHelperServer.length));
-	//if (func_MoveHelperServer == nullptr) {
-	//	LUA->ThrowError("Failed to find MoveHelperServer");
-	//	return 0;
-	//}
+	void *movehelperRef = symfinder.Resolve(server_loader.GetModule(), sym_MoveHelper.name.c_str(), sym_MoveHelper.length);
+
+	if (!movehelperRef)
+	{
+		LUA->ThrowError("Failed to find MoveHelper reference");
+		return 0;
+	}
+
+	uintptr_t instruction = reinterpret_cast<uintptr_t>(movehelperRef);
+	uintptr_t address_of_g_MoveHelper_pointer = ResolveRipRelativeAddress(instruction, 0, 3, 7);
+
+	g_MoveHelperPtr = reinterpret_cast<IMoveHelperServer ***>(address_of_g_MoveHelper_pointer);
+	func_AddToTouched = reinterpret_cast<AddToTouched_t>(symfinder.Resolve(server_loader.GetModule(), sym_AddToTouched.name.c_str(), sym_AddToTouched.length));
 
 	func_TryPlayerMove = reinterpret_cast<TryPlayerMove_t>(symfinder.Resolve(server_loader.GetModule(), sym_TryPlayerMove.name.c_str(), sym_TryPlayerMove.length));
 
