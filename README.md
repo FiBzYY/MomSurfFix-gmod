@@ -47,8 +47,8 @@ make config=release_x86_64
 * [Momentum mod team for the actual fix](https://momentum-mod.org/);
 * [Guys from bhoptimer discord for testing](https://discord.gg/jyA9q5k);
 
-## DO TO:
-Fix MoveHelper patterns on linux64
+## Fixed:
+Fix MoveHelper Touched patterns on linux64
 
 ### Credits:
 * Rio for the logic. Github: [https://github.com/rio](https://github.com/jason-e)
