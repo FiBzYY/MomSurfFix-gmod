@@ -50,6 +50,10 @@ make config=release_x86_64
 ## DO TO:
 Fix MoveHelper patterns on linux64
 
+### Credits:
+* Rio for the logic. Github: [https://github.com/rio](https://github.com/jason-e)
+* Me for adding linux64 patterns. - Discord: FiBzYY Steam: [https://steamcommunity.com/id/fibzy_](https://steamcommunity.com/id/fibzy_/)
+
 * ### Note:
 * The source code patterns for GMod will not be released due to game security of facepunch.
 * Dev 64x branch has not been implemented or tested yet.
