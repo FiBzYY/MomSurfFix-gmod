@@ -17,3 +17,7 @@ That fix modifies ``CGameMovement::TryPlayerMove()`` function to behave like mom
 
 ## DO TO:
 Fix MoveHelper patterns on linux64
+
+* ### Note:
+* The source code patterns for GMod will not be released due to game security of facepunch.
+* Dev 64x branch has not been implemented or tested yet.
